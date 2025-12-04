@@ -11,7 +11,7 @@ export function createApp() {
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (!origin) return callback(null, true); // allow Postman / curl
+        if (!origin) return callback(null, true);
         if (env.allowedOrigins.includes(origin)) {
           return callback(null, true);
         }
