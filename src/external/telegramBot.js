@@ -3,19 +3,24 @@ import {
   isPhoneAllowed, 
   registerUserChatId,
   sendTelegramMessage,
-  TELEGRAM_CONFIG
+  TELEGRAM_CONFIG,
+  loadVerifiedUsers
 } from './telegramVerification.js';
 
 let botInitialized = false;
+const processedMessages = new Set();
+const verificationInProgress = new Map();
 
 export function initTelegramBot() {
   if (botInitialized) return;
-  
+
   botInitialized = true;
+
+  loadVerifiedUsers();
+
   console.log('Telegram bot initialized');
   console.log('Allowed phones:', TELEGRAM_CONFIG.allowedPhones);
-  
-  // Poll for updates
+
   pollUpdates();
 }
 
@@ -36,24 +41,47 @@ async function pollUpdates() {
       }
     } catch (err) {
       console.error('Telegram polling error:', err);
-      await new Promise(resolve => setTimeout(resolve, 5000));
     }
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 }
 
 async function handleUpdate(update) {
-  if (update.message) {
-    await handleMessage(update.message);
-  } else if (update.callback_query) {
-    await handleCallbackQuery(update.callback_query);
+  try {
+    if (update.message) {
+      const messageId = `${update.message.chat.id}_${update.message.message_id}`;
+      
+      console.log(`🔍 Processing update_id: ${update.update_id}, message_id: ${messageId}`);
+      
+      // Skip if already processed
+      if (processedMessages.has(messageId)) {
+        console.log(`⏭️ Already processed: ${messageId}`);
+        return;
+      }
+      
+      processedMessages.add(messageId);
+      console.log(`✅ Marked as processed: ${messageId}`);
+      
+      // Clean up old messages (keep last 100)
+      if (processedMessages.size > 100) {
+        const arr = Array.from(processedMessages);
+        processedMessages.clear();
+        arr.slice(-50).forEach(id => processedMessages.add(id));
+      }
+      
+      await handleMessage(update.message);
+    } else if (update.callback_query) {
+      await handleCallbackQuery(update.callback_query);
+    }
+  } catch (err) {
+    console.error('Error handling update:', err);
   }
 }
 
 async function handleMessage(message) {
   const chatId = message.chat.id;
   const text = message.text || '';
+  
+  console.log(`📨 Message from ${chatId}: ${text || '[contact/media]'}`);
   
   // Handle /start command
   if (text === '/start') {
@@ -88,22 +116,46 @@ async function handleMessage(message) {
 
 async function handleContactShared(chatId, contact) {
   const phone = contact.phone_number;
+  const verificationKey = `${chatId}_${phone}`;
   
-  if (isPhoneAllowed(phone)) {
-    registerUserChatId(phone, chatId);
-    
-    await sendTelegramMessage(chatId, 
-      '✅ <b>Access Granted!</b>\n\n' +
-      'You will now receive lead notifications from Synertech.',
-      { reply_markup: { remove_keyboard: true } }
-    );
-  } else {
-    await sendTelegramMessage(chatId, 
-      '❌ <b>Access Denied</b>\n\n' +
-      'Your phone number is not authorized.\n' +
-      `Please contact the administrator:\n📞 ${TELEGRAM_CONFIG.adminPhone}`,
-      { reply_markup: { remove_keyboard: true } }
-    );
+  console.log(`📱 Contact shared from ${chatId}: ${phone}`);
+  
+  // Check if verification is already in progress
+  if (verificationInProgress.has(verificationKey)) {
+    console.log(`⏭️ Verification already in progress for ${verificationKey}`);
+    return;
+  }
+  
+  // Mark verification as in progress
+  verificationInProgress.set(verificationKey, true);
+  
+  try {
+    if (isPhoneAllowed(phone)) {
+      registerUserChatId(phone, chatId);
+      
+      await sendTelegramMessage(chatId, 
+        '✅ <b>Access Granted!</b>\n\n' +
+        'You will now receive lead notifications from Synertech.',
+        { reply_markup: { remove_keyboard: true } }
+      );
+      
+      console.log(`✅ Sent access granted to ${chatId}`);
+    } else {
+      await sendTelegramMessage(chatId, 
+        '❌ <b>Access Denied</b>\n\n' +
+        'Your phone number is not authorized.\n' +
+        `Please contact the administrator:\n📞 ${TELEGRAM_CONFIG.adminPhone}`,
+        { reply_markup: { remove_keyboard: true } }
+      );
+      
+      console.log(`❌ Sent access denied to ${chatId}`);
+    }
+  } finally {
+    // Remove from in-progress after a delay to prevent rapid duplicates
+    setTimeout(() => {
+      verificationInProgress.delete(verificationKey);
+      console.log(`🗑️ Cleared verification lock for ${verificationKey}`);
+    }, 5000);
   }
 }
 
