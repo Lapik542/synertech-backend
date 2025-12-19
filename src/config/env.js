@@ -19,7 +19,10 @@ export const env = {
 
   allowedOrigins: toArray(
     process.env.ALLOWED_ORIGINS || 'http://localhost:4200'
-  )
+  ),
+
+  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '7578959430:AAGeQFnaGoUjANs-VYnlyavI_tneytwB0C4',
+  telegramChatId: process.env.TELEGRAM_CHAT_ID || '911010771',
 };
 
 export default env;
