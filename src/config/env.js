@@ -22,7 +22,6 @@ export const env = {
   ),
 
   telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '7578959430:AAGeQFnaGoUjANs-VYnlyavI_tneytwB0C4',
-  telegramChatId: process.env.TELEGRAM_CHAT_ID || '911010771',
 };
 
 export default env;
