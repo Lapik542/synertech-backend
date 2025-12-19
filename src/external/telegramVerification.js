@@ -9,7 +9,7 @@ const STORE_PATH = path.resolve(process.cwd(), 'verified-telegram-users.json');
 
 export const TELEGRAM_CONFIG = {
   adminPhone: '0663309198',
-  allowedPhones: ['0663309198']
+  allowedPhones: ['0663309198', '0637297407', '0636561274']
 };
 
 export function normalizePhone(phone) {
