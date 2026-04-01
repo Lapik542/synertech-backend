@@ -4,7 +4,6 @@ import path from 'path';
 
 const allowedUsers = new Map();
 
-// файл для збереження (локально)
 const STORE_PATH = path.resolve(process.cwd(), 'verified-telegram-users.json');
 
 export const TELEGRAM_CONFIG = {

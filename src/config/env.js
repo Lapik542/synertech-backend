@@ -15,13 +15,17 @@ export const env = {
 
   googleScriptUrl:
     process.env.GOOGLE_SCRIPT_URL ||
-    'https://script.google.com/macros/s/AKfycbwPsWvJuTaftUmGC985MZVUWubXwWLvtyc4l3gcxVf0R3d9N9_NSXjOhCibL44BAGWGdg/exec',
+    'https://script.google.com/macros/s/AKfycbwb3IGvra4QBkn975I4R18vRM0jT-m4NCzTJcMWHDCuO8NBiEvtcMkmAQ4AiNmFAFLkrw/exec',
 
   allowedOrigins: toArray(
     process.env.ALLOWED_ORIGINS || 'http://localhost:4200'
   ),
 
   telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '7578959430:AAGeQFnaGoUjANs-VYnlyavI_tneytwB0C4',
+
+  googleCredentials: process.env.GOOGLE_CREDENTIALS
+    ? JSON.parse(process.env.GOOGLE_CREDENTIALS)
+    : null,
 };
 
 export default env;

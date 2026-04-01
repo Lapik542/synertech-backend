@@ -1,5 +1,5 @@
 import { sendToGoogleScript } from '../external/googleScriptClient.js';
-import { sendTelegramNotification } from '../external/telegramClient.js';
+// import { sendTelegramNotification } from '../external/telegramClient.js';
 
 export async function createLead(lead) {
   if (!lead.name || !lead.email || !lead.phone) {
@@ -8,29 +8,33 @@ export async function createLead(lead) {
     throw err;
   }
 
-  // Normalize phone
-  lead.phone = normalizePhone(lead.phone);
+  const payload = {
+    name: lead.name || '',
+    email: lead.email || '',
+    phone: lead.phone || '',
+    services: lead.services || '',
+    challenge: lead.challenge || '',
+    budget: lead.budget || '',
+    deadline: lead.deadline || '',
+    comments: lead.comments || '',
+    status: lead.status || 'New',
+    link: lead.link || '',
+    utm_source: lead.utm_source || '',
+    utm_medium: lead.utm_medium || '',
+    utm_campaign: lead.utm_campaign || '',
+    utm_term: lead.utm_term || '',
+    utm_content: lead.utm_content || '',
+  };
 
-  // 1. Send to Google Sheets first
-  const result = await sendToGoogleScript(lead);
+  const result = await sendToGoogleScript(payload);
   console.log('Google Sheets: success');
 
-  // 2. Send Telegram notification after successful Google Sheets submission
-  try {
-    const telegramResult = await sendTelegramNotification(lead);
-    console.log('Telegram notification:', telegramResult);
-  } catch (err) {
-    console.error('Telegram notification failed:', err);
-    // Don't throw - Google Sheets already saved
-  }
+  // try {
+  //   const telegramResult = await sendTelegramNotification(payload);
+  //   console.log('Telegram notification:', telegramResult);
+  // } catch (err) {
+  //   console.error('Telegram notification failed:', err);
+  // }
 
-  return {
-    success: true,
-    providerResponse: result
-  };
-}
-
-function normalizePhone(phone) {
-  // Remove all characters except digits and +
-  return phone.replace(/[^\d+]/g, '');
+  return { success: true, providerResponse: result };
 }
