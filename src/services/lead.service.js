@@ -1,5 +1,5 @@
 import { sendToGoogleScript } from '../external/googleScriptClient.js';
-// import { sendTelegramNotification } from '../external/telegramClient.js';
+import { sendTelegramNotification } from '../external/telegramClient.js';
 
 export async function createLead(lead) {
   if (!lead.name || !lead.email || !lead.phone) {
@@ -29,12 +29,12 @@ export async function createLead(lead) {
   const result = await sendToGoogleScript(payload);
   console.log('Google Sheets: success');
 
-  // try {
-  //   const telegramResult = await sendTelegramNotification(payload);
-  //   console.log('Telegram notification:', telegramResult);
-  // } catch (err) {
-  //   console.error('Telegram notification failed:', err);
-  // }
+  try {
+    const telegramResult = await sendTelegramNotification(payload);
+    console.log('Telegram notification:', telegramResult);
+  } catch (err) {
+    console.error('Telegram notification failed:', err);
+  }
 
   return { success: true, providerResponse: result };
 }
